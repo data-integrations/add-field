@@ -20,7 +20,7 @@
 
   <groupId>co.cask.plugin</groupId>
   <artifactId>field-adder</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
   <name>Data Pipeline Batch Plugins</name>
