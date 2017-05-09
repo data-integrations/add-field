@@ -1,0 +1,43 @@
+{
+  "metadata": {
+    "spec-version": "1.0"
+  },
+  "configuration-groups": [
+    {
+      "label": "Add Field Configuration",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Field Name",
+          "name": "fieldName"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Field Value",
+          "name": "fieldValue"
+        },
+        {
+          "widget-type": "select",
+          "label": "Generate UUID as Value",
+          "name": "asUUID",
+          "widget-attributes": {
+            "values": [
+              "true",
+              "false"
+            ],
+            "default": "false"
+          },
+          "plugin-function": {
+            "method": "POST",
+            "widget": "outputSchema",
+            "output-property": "schema",
+            "plugin-method": "outputSchema",
+            "required-fields": ["fieldName"],
+            "missing-required-fields-message": "The 'fieldName' property and one of 'fieldValue' or 'asUUID' required to fetch schema."
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": []
+}

@@ -1,0 +1,11 @@
+# Intellij Files & Dir #
+*.iml
+*.ipr
+*.iws
+atlassian-ide-plugin.xml
+out/
+.DS_Store
+./lib/
+.idea
+
+target/
