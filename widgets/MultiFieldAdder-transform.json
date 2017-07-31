@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "spec-version": "1.0"
+  },
+  "configuration-groups": [
+    {
+      "label": "Multi Field Adder Configuration",
+      "properties": [
+        {
+          "name": "fieldValue",
+          "label" : "Field and Value Pairs",
+          "widget-type": "keyvalue",
+          "widget-attributes": {
+            "delimiter": ",",
+            "kv-delimiter": ":"
+          },
+          "plugin-function": {
+            "method": "POST",
+            "widget": "outputSchema",
+            "output-property": "schema",
+            "plugin-method": "outputSchema",
+            "required-fields": ["fieldValue"],
+            "missing-required-fields-message": "No field value specified."
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": []
+}
