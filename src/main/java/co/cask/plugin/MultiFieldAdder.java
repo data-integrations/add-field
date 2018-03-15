@@ -1,6 +1,7 @@
 package co.cask.plugin;
 
 import co.cask.cdap.api.annotation.Description;
+import co.cask.cdap.api.annotation.Macro;
 import co.cask.cdap.api.annotation.Name;
 import co.cask.cdap.api.annotation.Plugin;
 import co.cask.cdap.api.data.format.StructuredRecord;
@@ -36,12 +37,13 @@ public class MultiFieldAdder extends Transform<StructuredRecord, StructuredRecor
 
   public static class Conf extends PluginConfig {
     @Name("fieldValue")
+    @Macro
     @Description("Specify a field value pair that needs to added to output.")
     private String fieldValue;
 
     Map<String, String> getFieldValue() throws IllegalArgumentException {
       Map<String, String> values = new TreeMap<>();
-      if (fieldValue == null || fieldValue.trim().isEmpty()) {
+      if (containsMacro("fieldValue") || fieldValue == null || fieldValue.trim().isEmpty()) {
         return values;
       }
 
