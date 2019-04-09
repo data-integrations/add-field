@@ -14,30 +14,32 @@
  * the License.
  */
 
-package co.cask.plugin;
+package io.cdap.plugin;
 
-import co.cask.cdap.api.data.format.StructuredRecord;
-import co.cask.cdap.api.data.schema.Schema;
-import co.cask.cdap.api.dataset.table.Table;
-import co.cask.cdap.datapipeline.DataPipelineApp;
-import co.cask.cdap.datapipeline.SmartWorkflow;
-import co.cask.cdap.etl.api.Transform;
-import co.cask.cdap.etl.mock.batch.MockSink;
-import co.cask.cdap.etl.mock.batch.MockSource;
-import co.cask.cdap.etl.mock.test.HydratorTestBase;
-import co.cask.cdap.etl.proto.v2.ETLBatchConfig;
-import co.cask.cdap.etl.proto.v2.ETLPlugin;
-import co.cask.cdap.etl.proto.v2.ETLStage;
-import co.cask.cdap.proto.artifact.AppRequest;
-import co.cask.cdap.proto.artifact.ArtifactSummary;
-import co.cask.cdap.proto.id.ApplicationId;
-import co.cask.cdap.proto.id.ArtifactId;
-import co.cask.cdap.proto.id.NamespaceId;
-import co.cask.cdap.test.ApplicationManager;
-import co.cask.cdap.test.DataSetManager;
-import co.cask.cdap.test.TestConfiguration;
-import co.cask.cdap.test.WorkflowManager;
 import com.google.common.collect.ImmutableMap;
+import io.cdap.cdap.api.artifact.ArtifactSummary;
+import io.cdap.cdap.api.data.format.StructuredRecord;
+import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.cdap.api.dataset.table.Table;
+import io.cdap.cdap.datapipeline.DataPipelineApp;
+import io.cdap.cdap.datapipeline.SmartWorkflow;
+import io.cdap.cdap.etl.api.Transform;
+import io.cdap.cdap.etl.mock.batch.MockSink;
+import io.cdap.cdap.etl.mock.batch.MockSource;
+import io.cdap.cdap.etl.mock.test.HydratorTestBase;
+import io.cdap.cdap.etl.proto.v2.ETLBatchConfig;
+import io.cdap.cdap.etl.proto.v2.ETLPlugin;
+import io.cdap.cdap.etl.proto.v2.ETLStage;
+import io.cdap.cdap.proto.ProgramRunStatus;
+import io.cdap.cdap.proto.artifact.AppRequest;
+import io.cdap.cdap.proto.id.ApplicationId;
+import io.cdap.cdap.proto.id.ArtifactId;
+import io.cdap.cdap.proto.id.NamespaceId;
+import io.cdap.cdap.test.ApplicationManager;
+import io.cdap.cdap.test.DataSetManager;
+import io.cdap.cdap.test.TestConfiguration;
+import io.cdap.cdap.test.WorkflowManager;
+import io.cdap.plugin.AddField;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -105,7 +107,7 @@ public class PipelineTest extends HydratorTestBase {
 
     WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start(ImmutableMap.of("val", "abc123"));
-    workflowManager.waitForFinish(4, TimeUnit.MINUTES);
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 4, TimeUnit.MINUTES);
 
     Schema outputSchema = Schema.recordOf(
       "name.added",
