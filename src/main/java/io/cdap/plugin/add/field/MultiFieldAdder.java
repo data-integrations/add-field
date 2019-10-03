@@ -1,16 +1,31 @@
-package io.cdap.plugin;
+/*
+ * Copyright © 2016-2019 Cask Data, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package io.cdap.plugin.add.field;
 
 import io.cdap.cdap.api.annotation.Description;
-import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.annotation.Plugin;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
-import io.cdap.cdap.api.plugin.PluginConfig;
 import io.cdap.cdap.etl.api.Emitter;
+import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.cdap.etl.api.InvalidEntry;
 import io.cdap.cdap.etl.api.PipelineConfigurer;
 import io.cdap.cdap.etl.api.StageConfigurer;
+import io.cdap.cdap.etl.api.StageSubmitterContext;
 import io.cdap.cdap.etl.api.Transform;
 import io.cdap.cdap.etl.api.TransformContext;
 import org.slf4j.Logger;
@@ -32,45 +47,14 @@ import javax.ws.rs.Path;
 public class MultiFieldAdder extends Transform<StructuredRecord, StructuredRecord> {
   private static final Logger LOG = LoggerFactory.getLogger(MultiFieldAdder.class);
   public static final String NAME = "MultiFieldAdder";
-  private final Conf config;
+  private final MultiFieldAdderConfig config;
   private Map<String, String> fieldMaps = new TreeMap<>();
 
-  public static class Conf extends PluginConfig {
-    @Name("fieldValue")
-    @Macro
-    @Description("Specify a field value pair that needs to added to output.")
-    private String fieldValue;
-
-    Map<String, String> getFieldValue() throws IllegalArgumentException {
-      Map<String, String> values = new TreeMap<>();
-      if (containsMacro("fieldValue") || fieldValue == null || fieldValue.trim().isEmpty()) {
-        return values;
-      }
-
-      String[] fvPairs = fieldValue.split(",");
-      for (String fvPair : fvPairs) {
-        String[] fieldAndValue = fvPair.split(":");
-        if (fieldAndValue.length != 2) {
-          continue;
-        }
-        String fieldName = fieldAndValue[0];
-        String fieldValue = fieldAndValue[1];
-        if (values.containsKey(fieldName)) {
-          throw new IllegalArgumentException(
-            String.format("Field '%s' is specified multiple times.")
-          );
-        }
-        values.put(fieldName, fieldValue);
-      }
-      return values;
-    }
-  }
-
-  public static class GetSchemaRequest extends Conf {
+  public static class GetSchemaRequest extends MultiFieldAdderConfig {
     private Schema inputSchema;
   }
 
-  public MultiFieldAdder(Conf config) {
+  public MultiFieldAdder(MultiFieldAdderConfig config) {
     this.config = config;
   }
 
@@ -78,10 +62,20 @@ public class MultiFieldAdder extends Transform<StructuredRecord, StructuredRecor
   public void configurePipeline(PipelineConfigurer configurer) {
     StageConfigurer stageConfigurer = configurer.getStageConfigurer();
     Schema inputSchema = stageConfigurer.getInputSchema();
-    config.getFieldValue();
+    FailureCollector failureCollector = stageConfigurer.getFailureCollector();
+    config.validate(failureCollector);
+
     if (inputSchema != null) {
       stageConfigurer.setOutputSchema(getOutputSchema(inputSchema, config));
     }
+  }
+
+  @Override
+  public void prepareRun(StageSubmitterContext context) throws Exception {
+    super.prepareRun(context);
+    FailureCollector failureCollector = context.getFailureCollector();
+    config.validate(failureCollector);
+    failureCollector.getOrThrowException();
   }
 
   @Override
@@ -114,7 +108,7 @@ public class MultiFieldAdder extends Transform<StructuredRecord, StructuredRecor
     return getOutputSchema(request.inputSchema, request);
   }
 
-  private Schema getOutputSchema(Schema schema, Conf config) {
+  private Schema getOutputSchema(Schema schema, MultiFieldAdderConfig config) {
     if (schema == null) {
       throw new IllegalArgumentException("No node is connected. Please connect a node to generate the schema.");
     }
