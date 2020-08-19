@@ -105,7 +105,7 @@ public class AddField extends Transform<StructuredRecord, StructuredRecord> {
   private Schema getOutputSchema(Schema inputSchema, AddFieldConfig config) {
     List<Schema.Field> fields = new ArrayList<>(inputSchema.getFields().size() + 1);
     fields.addAll(inputSchema.getFields());
-    fields.add(Schema.Field.of(config.getFieldName(), Schema.nullableOf(Schema.of(Schema.Type.STRING))));
+    fields.add(Schema.Field.of(config.getFieldName(), Schema.of(Schema.Type.STRING)));
     return Schema.recordOf(inputSchema.getRecordName() + ".added", fields);
   }
 
