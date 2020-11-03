@@ -18,21 +18,22 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>co.cask.plugin</groupId>
-  <artifactId>field-adder</artifactId>
-  <version>2.0.0</version>
+  <groupId>org.example.hydrator.plugins</groupId>
+  <artifactId>multi-field</artifactId>
+  <version>1.2.0-SNAPSHOT</version>
   <packaging>jar</packaging>
-  <name>Field Adder Plugin</name>
+
+  <name>Multi Field</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <cdap.version>4.1.1</cdap.version>
-    <!-- properties for script build step that creates the config files for the artifacts -->
-    <widgets.dir>widgets</widgets.dir>
-    <docs.dir>docs</docs.dir>
-    <app.parents>system:cdap-data-pipeline[4.1.0,5.0.0),system:cdap-data-streams[4.1.0,5.0.0)</app.parents>
-    <!-- this is here because project.basedir evaluates to null in the script build step -->
-    <main.basedir>${project.basedir}</main.basedir>
+    <cdap.version>6.0.0</cdap.version>
+    <cdap.plugin.version>2.2.0</cdap.plugin.version>
+    <!-- This is the version range for the app.parents that this plugin is valid for. Usually this will correspond with
+         the CDAP version, but not always. -->
+    <etl.versionRange>[6.0.0,10.0.0-SNAPSHOT)</etl.versionRange>
+    <!-- This is the list of packages where your code exists. You can add multiple and separated with a ; or use wildcards *. -->
+    <exported-packages>org.example.hydrator.plugin.*</exported-packages>
   </properties>
 
   <repositories>
@@ -48,20 +49,69 @@
 
   <dependencies>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
-      <artifactId>cdap-etl-api</artifactId>
+      <groupId>io.cdap.cdap</groupId>
+      <artifactId>cdap-api</artifactId>
       <version>${cdap.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
-      <artifactId>cdap-data-pipeline</artifactId>
+      <groupId>io.cdap.cdap</groupId>
+      <artifactId>cdap-etl-api</artifactId>
+      <version>${cdap.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.cdap.cdap</groupId>
+      <artifactId>cdap-unit-test</artifactId>
       <version>${cdap.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
+      <groupId>io.cdap.plugin</groupId>
+      <artifactId>hydrator-common</artifactId>
+      <version>${cdap.plugin.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.cdap.cdap</groupId>
       <artifactId>hydrator-test</artifactId>
       <version>${cdap.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.cdap.wrangler</groupId>
+      <artifactId>wrangler-api</artifactId>
+      <version>4.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.cdap.wrangler</groupId>
+      <artifactId>wrangler-api</artifactId>
+      <version>4.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.cdap.wrangler</groupId>
+      <artifactId>wrangler-test</artifactId>
+      <version>4.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.cdap.cdap</groupId>
+      <artifactId>cdap-explore-jdbc</artifactId>
+      <version>6.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>co.cask.cdap</groupId>
+      <artifactId>cdap-data-pipeline</artifactId>
+      <version>4.1.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>3.5.15</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -71,39 +121,41 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
+        <version>3.7.0</version>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.14.1</version>
+      </plugin>
+      <plugin>
+        <groupId>io.cdap</groupId>
+        <artifactId>cdap-maven-plugin</artifactId>
+        <version>1.1.0</version>
         <configuration>
-          <argLine>-Xmx5000m -Djava.awt.headless=true -XX:MaxPermSize=1024m -XX:+UseConcMarkSweepGC -XX:OnOutOfMemoryError="kill -9 %p" -Djava.net.preferIPv4Stack=true</argLine>
-          <reuseForks>false</reuseForks>
-          <reportFormat>plain</reportFormat>
-          <systemPropertyVariables>
-            <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
-          </systemPropertyVariables>
-          <includes>
-            <include>**/*TestsSuite.java</include>
-            <include>**/*TestSuite.java</include>
-            <include>**/Test*.java</include>
-            <include>**/*Test.java</include>
-            <include>**/*TestCase.java</include>
-          </includes>
-          <excludes>
-            <exclude>**/*TestRun.java</exclude>
-          </excludes>
+          <cdapArtifacts>
+            <parent>system:cdap-data-pipeline${etl.versionRange}</parent>
+            <parent>system:cdap-data-streams${etl.versionRange}</parent>
+          </cdapArtifacts>
         </configuration>
+        <executions>
+          <execution>
+            <id>create-artifact-config</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>create-plugin-json</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>2.5.4</version>
+        <version>3.3.0</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
@@ -111,7 +163,7 @@
             <Embed-Transitive>true</Embed-Transitive>
             <Embed-Directory>lib</Embed-Directory>
             <!--Only @Plugin classes in the export packages will be included as plugin-->
-            <_exportcontents>co.cask.plugin.*</_exportcontents>
+            <_exportcontents>${exported-packages}</_exportcontents>
           </instructions>
         </configuration>
         <executions>
@@ -119,97 +171,6 @@
             <phase>package</phase>
             <goals>
               <goal>bundle</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.7</version>
-        <executions>
-          <!-- Create the config file for artifact which can be used to deploy the artifact.
-               Sets the parents field to system:cdap-etl-batch and system:cdap-etl-realtime with whatever
-               version range is set in the etl.versionRange property.
-               also sets a widget and doc property for each file contained in the widgets and docs directories. -->
-          <execution>
-            <id>create-artifact-config</id>
-            <phase>prepare-package</phase>
-            <configuration>
-              <target>
-                <script language="javascript"> <![CDATA[
-
-                  // for some reason, project.basedir evaluates to null if we just get the property here.
-                  // so we set main.basedir to project.basedir in the pom properties, then main.basedir is used here
-                  // where it evaluates correctly for whatever reason
-                  var baseDir = project.getProperty("main.basedir");
-                  var targetDir = project.getProperty("project.build.directory");
-                  var artifactId = project.getProperty("project.artifactId");
-                  var version = project.getProperty("project.version");
-
-                  var cfgFile = new java.io.File(targetDir, artifactId + "-" + version + ".json");
-                  if (!cfgFile.exists()) {
-                    cfgFile.createNewFile();
-                  }
-
-                  var parents = project.getProperty("app.parents").split(",");
-                  var config = {
-                    "parents": [ ],
-                    "properties": {}
-                  }
-                  for (i = 0; i < parents.length; i+=2) {
-                    // because name1[lo,hi],name2[lo,hi] gets split into "name1[lo", "hi]", "name2[lo", "hi]"
-                    // so we have to combine them again
-                    config.parents.push(parents[i] + "," + parents[i+1]);
-                  }
-
-                  // look in widgets directory for widget config for each plugin
-                  var widgetsDir = new java.io.File(baseDir, project.getProperty("widgets.dir"));
-                  if (widgetsDir.isDirectory()) {
-                    var widgetsFiles = widgetsDir.listFiles();
-                    for (i = 0; i < widgetsFiles.length; i++) {
-                      var widgetsFile = widgetsFiles[i];
-                      if (widgetsFile.isFile()) {
-                        var propertyName = "widgets." + widgetsFile.getName();
-                        // if the filename ends with .json
-                        if (propertyName.indexOf(".json", propertyName.length - 5) !== -1) {
-                          // strip the .json
-                          propertyName = propertyName.slice(0, -5);
-                          var contents = new java.lang.String(java.nio.file.Files.readAllBytes(widgetsFile.toPath()), java.nio.charset.StandardCharsets.UTF_8);
-                          var contentsAsJson = JSON.parse(contents);
-                          config.properties[propertyName] = JSON.stringify(contentsAsJson);
-                        }
-                      }
-                    }
-                  }
-
-                  // look in the docs directory for docs for each plugin
-                  var docsDir = new java.io.File(baseDir, project.getProperty("docs.dir"));
-                  if (docsDir.isDirectory()) {
-                    var docFiles = docsDir.listFiles();
-                    for (i = 0; i < docFiles.length; i++) {
-                      var docFile = docFiles[i];
-                      if (docFile.isFile()) {
-                        var propertyName = "doc." + docFile.getName();
-                        // if the filename ends with .md
-                        if (propertyName.indexOf(".md", propertyName.length - 3) !== -1) {
-                          // strip the extension
-                          propertyName = propertyName.slice(0, -3);
-                          var contents = new java.lang.String(java.nio.file.Files.readAllBytes(docFile.toPath()), java.nio.charset.StandardCharsets.UTF_8);
-                          config.properties[propertyName] = contents + "";
-                        }
-                      }
-                    }
-                  }
-
-                  var fw = new java.io.BufferedWriter(new java.io.FileWriter(cfgFile.getAbsoluteFile()));
-                  fw.write(JSON.stringify(config, null, 2));
-                  fw.close();
-                ]]></script>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
             </goals>
           </execution>
         </executions>

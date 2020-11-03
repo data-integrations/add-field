@@ -1,39 +1,20 @@
-/*
- * Copyright © 2016 Cask Data, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
+package org.example.hydrator.plugin;
 
-package co.cask.plugin;
+import io.cdap.cdap.api.annotation.Description;
+import io.cdap.cdap.api.annotation.Macro;
+import io.cdap.cdap.api.annotation.Name;
+import io.cdap.cdap.api.annotation.Plugin;
+import io.cdap.cdap.api.data.format.StructuredRecord;
+import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.cdap.api.plugin.PluginConfig;
+import io.cdap.cdap.etl.api.*;
 
-import co.cask.cdap.api.annotation.Description;
-import co.cask.cdap.api.annotation.Macro;
-import co.cask.cdap.api.annotation.Name;
-import co.cask.cdap.api.annotation.Plugin;
-import co.cask.cdap.api.data.format.StructuredRecord;
-import co.cask.cdap.api.data.schema.Schema;
-import co.cask.cdap.api.plugin.PluginConfig;
-import co.cask.cdap.etl.api.Emitter;
-import co.cask.cdap.etl.api.InvalidEntry;
-import co.cask.cdap.etl.api.PipelineConfigurer;
-import co.cask.cdap.etl.api.StageConfigurer;
-import co.cask.cdap.etl.api.Transform;
-
+import javax.annotation.Nullable;
+import javax.ws.rs.Path;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import javax.annotation.Nullable;
-import javax.ws.rs.Path;
 
 /**
  * Transform that can transforms specific fields to lowercase or uppercase.
@@ -56,18 +37,18 @@ public class AddField extends Transform<StructuredRecord, StructuredRecord> {
     @Name(FIELD_NAME)
     @Description("The name of the field to add. Must not already exist as an input field. The field type will be " +
       "a nullable string.")
-    private String fieldName;
+    public String fieldName;
 
     @Macro
     @Nullable
     @Name(FIELD_VALUE)
     @Description("The value to set for the new field. If this is not specified, 'asUUID' must be set to true.")
-    private String fieldValue;
+    public String fieldValue;
 
     @Nullable
     @Name(AS_UUID)
     @Description("Generate a new UUID for the new field. If this is not true, 'fieldValue' must be specified.")
-    private Boolean asUUID;
+    public Boolean asUUID;
 
     public Conf() {
       asUUID = false;
