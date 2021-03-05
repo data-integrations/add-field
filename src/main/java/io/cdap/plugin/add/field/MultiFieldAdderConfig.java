@@ -39,18 +39,21 @@ public class MultiFieldAdderConfig extends PluginConfig {
 
   Map<String, String> getFieldValue() throws IllegalArgumentException {
     Map<String, String> values = new TreeMap<>();
-    if (containsMacro(FIELD_VALUE) || fieldValue == null || fieldValue.trim().isEmpty()) {
+    if (containsMacro(FIELD_VALUE)) {
+      fieldValue = getMacroFieldValue();
+    }
+    if (fieldValue == null || fieldValue.trim().isEmpty()) {
       return values;
     }
 
     String[] fvPairs = fieldValue.split(",");
     for (String fvPair : fvPairs) {
       String[] fieldAndValue = fvPair.split(":");
-      if (fieldAndValue.length != 2) {
+      if (fieldAndValue.length != 2 || fvPair.startsWith("$")) {
         continue;
       }
       String fieldName = fieldAndValue[0];
-      String fieldValue = fieldAndValue[1];
+      String fieldValue = fieldAndValue[1].contains("$") ? null : fieldAndValue[1];
       values.put(fieldName, fieldValue);
     }
     return values;
@@ -76,6 +79,13 @@ public class MultiFieldAdderConfig extends PluginConfig {
         values.put(fieldName, fieldValue);
       }
     }
+  }
+
+  /**
+   * Get fieldValue when either key or value specified as macro.
+   */
+  public String getMacroFieldValue() {
+    return getRawProperties().getProperties().get(FIELD_VALUE);
   }
 
   /**
