@@ -28,6 +28,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <cdap.version>6.8.0-SNAPSHOT</cdap.version>
     <powermock.version>2.0.2</powermock.version>
+    <cdap.data.pipeline.version>6.4.0</cdap.data.pipeline.version>
     <testSourceLocation>${project.basedir}/src/test/java/</testSourceLocation>
   </properties>
 
@@ -62,7 +63,7 @@
     <dependency>
       <groupId>io.cdap.cdap</groupId>
       <artifactId>cdap-data-pipeline</artifactId>
-      <version>6.4.0</version>
+      <version>${cdap.data.pipeline.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
